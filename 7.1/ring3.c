@@ -6,7 +6,7 @@
 
 #define BUF_SIZE 1024
 
-int 
+  int 
 main(int argc, char **argv)
 {
   pid_t childpid;
@@ -68,31 +68,35 @@ main(int argc, char **argv)
     if (childpid != 0) {
       break;
     } 
-  }
 
+  }
   procs[0] = (long)getpid();
   char buf[BUF_SIZE] = {0};
-  char *nextID = NULL;
+  long nextID = (long)getpid();
   int readbytes = 0;
 
-  sprintf(buf, "%ld", (long)getpid());
-  write(STDOUT_FILENO, buf, strlen(buf)+1);
+  int k;
+  for (k = 1; k < nprocs; k++) {
+    sprintf(buf, "%ld\n", nextID);
+    write(STDOUT_FILENO, buf, strlen(buf));
 
-
-  readbytes = read(STDIN_FILENO, buf, BUF_SIZE);
-  if (readbytes == -1) {
-    fprintf(stderr, "[%ld]: failed to read next id, proc: %d\n", (long)getpid(), i);
-    return 1;
+    readbytes = read(STDIN_FILENO, buf, BUF_SIZE);
+    if (readbytes == -1) {
+      fprintf(stderr, "[%ld]: failed to read next id, proc: %d\n", (long)getpid(), i);
+      return 1;
+    }
+    nextID = atoi(buf);
+    procs[k] = nextID;
+    memset(buf, 0, sizeof(buf));
   }
+//   wait(NULL);
+ // waitpid(childpid, NULL, WNOHANG);
 
-  procs[i] = atoi(buf);
-  wait(NULL);
-  for (i = 0; i< nprocs; i++)
-  {
-     sprintf(buf+i, "%ld ", procs[i]);
-  }
+  int j;
+  fprintf(stderr, "\nthis is process %-2d with ID %-4ld and parent id %-4ld\n", i, (long)getpid(), (long)getppid());
+  for (j = 0; j< nprocs; j++)
+    fprintf(stderr, " %-4ld ", procs[j]);
+  fprintf(stderr, "\n");
 
-  fprintf(stderr, "this is process %d with ID %ld and parent id %ld, buf: %s\n", i, (long)getpid(), (long)getppid(), buf);
-  // wait(NULL);
   return 0;
 }
